@@ -1,0 +1,59 @@
+version: '3'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        RUBY_VERSION: '2.7.2'
+        RUBY_BUNDLER_VERSION: '2.2.2'
+    image: kindy-rw-back-dev:1.0.1
+    tmpfs:
+      - /tmp
+    command: bundle exec rails s -b 0.0.0.0
+    environment:
+      DATABASE_URL: mysql2://root@mysql
+      EDITOR: vi
+      redis_session_url: redis://redis:6379/1
+      REDIS_URL: redis://redis:6379/0
+      DOCKER: 1
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/kindy-rw-back:delegated
+      - bundle-data:/usr/local/bundle
+      - tmp-data:/kindy-rw-back/tmp
+      - log-data:/kindy-rw-back/log
+    depends_on:
+      - mysql
+      - redis
+    tty: true
+    stdin_open: true
+
+  mysql:
+    image: mysql:5.7.22
+    environment:
+      - MYSQL_USER=root
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - 3306:3306
+  redis:
+    image: redis:5.0.6
+    volumes:
+      - redis-data:/data
+    ports:
+      - '6379:6379'
+
+volumes:
+  mysql-data:
+    driver: local
+  bundle-data:
+    driver: local
+  tmp-data:
+    driver: local
+  log-data:
+    driver: local
+  redis-data:
+    driver: local
